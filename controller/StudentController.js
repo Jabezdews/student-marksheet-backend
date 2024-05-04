@@ -119,3 +119,68 @@ exports.DeleteStudent = async (req, res) => {
     });
   }
 };
+exports.StudentDashboardDetails = async (req, res) => {
+  console.log(req.params, 124);
+  try {
+    const Data = await StudentModel.aggregate([
+      {
+        $unwind: "$Grade",
+      },
+      {
+        $group: {
+          _id: "$Grade", //grouping is based on _Id field works like reduce method and give the result
+          GradeCount: { $sum: 1 },
+
+          // Movies: { $push: "$name" }, //push the name filed in the movie array
+        },
+      },
+    ]);
+    let modified = {};
+    Data.map((item) => {
+      modified[item._id] = item.GradeCount;
+    });
+    res
+      .status(200)
+      .json({ status: "Success", data: modified});
+  } catch (err) {
+    res.status(400).json({
+      status: "Failed to Get StudentDashboardDetails",
+      Message: err.message,
+    });
+  }
+};
+exports.StudentDashboardDetailsByGender = async (req, res) => {
+  try {
+    // let GenderData = await StudentModel.find({ Gender: req.params.gender });
+
+    const Data = await StudentModel.aggregate([
+      {
+        $match: {
+          Gender: req.params.gender
+        }
+      },
+      {
+        $unwind: "$Grade",
+      },
+      {
+        $group: {
+          _id: "$Grade", //grouping is based on _Id field works like reduce method and give the result
+          GradeCount: { $sum: 1 },
+
+          // Movies: { $push: "$name" }, //push the name filed in the movie array
+        },
+      },
+    ]);
+
+    let modified = {};
+    Data.map((item) => {
+      modified[item._id] = item.GradeCount;
+    });
+    res.status(201).json({ status: "Success", data: modified });
+  } catch (err) {
+    res.status(404).json({
+      status: "Failed to Get Courses",
+      Message: err.message,
+    });
+  }
+};
